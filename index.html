@@ -296,6 +296,15 @@ function loadData(){
     requests.appendChild(div);
   });
 
+  console.log(user.friends); // Sanity check for friends list data
+  if (user.friends.length > 1) {
+  let latest = user.friends[user.friends.length - 1];
+  let isDuplicate = user.friends.indexOf(latest) !== user.friends.lastIndexOf(latest);
+  if (isDuplicate) {
+    console.log("Duplicate found:", latest); // Duplicate log
+  }
+ }
+  
   // friends
   friendsList.innerHTML="";
   user.friends.forEach(f=>{
@@ -303,8 +312,6 @@ function loadData(){
     div.textContent=f;
     friendsList.appendChild(div);
   });
-
-  console.log(user.friends);
 }
 
 // BREATHING
