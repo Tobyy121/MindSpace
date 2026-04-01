@@ -300,8 +300,10 @@ function loadData(){
   if (user.friends.length > 1) {
   let latest = user.friends[user.friends.length - 1];
   let isDuplicate = user.friends.indexOf(latest) !== user.friends.lastIndexOf(latest);
+  let currentDuplicate = isDuplicate;
   if (isDuplicate) {
-    console.log("Duplicate found:", latest); // Duplicate log
+    console.log("Duplicate found:", latest, currentDuplicate, isDuplicate); // Duplicate log
+    user.friends.splice(user.friends.length - 1, 1); // removes 1 item at that index
   }
  }
   
