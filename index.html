@@ -247,10 +247,7 @@ function sendRequest(){
 
   if(!users[target]) return alert("User not found");
   if(target===currentUser) return alert("Can't add yourself");
-  if(user.friendsList.includes(target)) {
-    alert("This person is already on your friends list!");
-    return;
-  }
+  if(user.friendsList.includes(target)) return alert("This person is already on your friends list!");
 
   users[target].requests.push(currentUser);
   localStorage.setItem('users', JSON.stringify(users));
