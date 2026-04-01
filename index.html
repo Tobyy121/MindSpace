@@ -247,7 +247,7 @@ function sendRequest(){
 
   if(!users[target]) return alert("User not found");
   if(target===currentUser) return alert("Can't add yourself");
-  if (user.friends.includes(target)) {
+  if(user.friendsList.includes(target)) {
     alert("This person is already on your friends list!");
     return;
   }
