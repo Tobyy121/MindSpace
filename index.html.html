@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindSpace</title>
+
+<style>
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background:#eef3f1;
+}
+
+header {
+  background: linear-gradient(135deg,#9dc5bb,#6fa89b);
+  color:white;
+  text-align:center;
+  padding:25px;
+}
+
+nav {
+  display:flex;
+  justify-content:space-around;
+  background:white;
+  padding:10px;
+}
+
+nav button {
+  background:none;
+  border:none;
+  font-weight:bold;
+  color:#6fa89b;
+  cursor:pointer;
+}
+
+.container {
+  padding:20px;
+  max-width:900px;
+  margin:auto;
+}
+
+.card {
+  background:white;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+}
+
+button.primary {
+  background:#6fa89b;
+  color:white;
+  border:none;
+  padding:10px 20px;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+input, textarea {
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+.hidden { display:none; }
+
+.timer {
+  font-size:2em;
+  text-align:center;
+  margin:20px;
+}
+
+.friend {
+  display:flex;
+  justify-content:space-between;
+  margin:5px 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>MindSpace</h1>
+<p>Relax • Reflect • Connect</p>
+</header>
+
+<nav id="navBar">
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('journal')">Journal</button>
+<button onclick="showPage('mood')">Mood</button>
+<button onclick="showPage('breathing')">Breathe</button>
+<button onclick="showPage('friends')">Friends</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login" class="page">
+<div class="card">
+<h2>Login / Create Account</h2>
+<input id="username" placeholder="Username">
+<button class="primary" onclick="login()">Enter</button>
+</div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page hidden">
+<div class="card">
+<h2 id="welcome"></h2>
+<p>Take a moment for yourself today 💚</p>
+</div>
+</div>
+
+<!-- JOURNAL -->
+<div id="journal" class="page hidden">
+<div class="card">
+<h2>Journal</h2>
+<textarea id="journalText" placeholder="Write your thoughts..."></textarea>
+<button class="primary" onclick="saveJournal()">Save</button>
+</div>
+
+<div class="card">
+<h3>Entries</h3>
+<ul id="entries"></ul>
+</div>
+</div>
+
+<!-- MOOD -->
+<div id="mood" class="page hidden">
+<div class="card">
+<h2>Mood Tracker</h2>
+<select id="moodSelect">
+<option>😊 Happy</option>
+<option>😐 Okay</option>
+<option>😢 Sad</option>
+<option>😡 Angry</option>
+</select>
+<button class="primary" onclick="saveMood()">Save Mood</button>
+</div>
+
+<div class="card">
+<h3>Past Moods</h3>
+<ul id="moodList"></ul>
+</div>
+</div>
+
+<!-- BREATHING -->
+<div id="breathing" class="page hidden">
+<div class="card">
+<h2>Breathing Exercise</h2>
+<p>Inhale & Exhale slowly</p>
+<div class="timer" id="timer">4</div>
+<button class="primary" onclick="startBreathing()">Start</button>
+</div>
+</div>
+
+<!-- FRIENDS -->
+<div id="friends" class="page hidden">
+
+<div class="card">
+<h3>Send Friend Request</h3>
+<input id="friendInput" placeholder="Username">
+<button class="primary" onclick="sendRequest()">Send</button>
+</div>
+
+<div class="card">
+<h3>Requests</h3>
+<div id="requests"></div>
+</div>
+
+<div class="card">
+<h3>Friends</h3>
+<div id="friendsList"></div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let currentUser = null;
+
+function showPage(id){
+  if(!currentUser && id !== 'login'){
+    alert("Login first");
+    id = 'login';
+  }
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function updateNav(){
+  document.getElementById('navBar').style.display =
+    currentUser ? 'flex' : 'none';
+}
+
+// LOGIN
+function login(){
+  const name = username.value;
+  if(!name) return;
+  currentUser = name;
+
+  let users = JSON.parse(localStorage.getItem('users')||'{}');
+  if(!users[name]){
+    users[name] = {friends:[], requests:[], journal:[], moods:[]};
+  }
+  localStorage.setItem('users', JSON.stringify(users));
+
+  welcome.textContent = "Welcome " + name;
+  updateNav();
+  loadData();
+  showPage('home');
+}
+
+function logout(){
+  currentUser = null;
+  updateNav();
+  showPage('login');
+}
+
+// JOURNAL
+function saveJournal(){
+  let users = JSON.parse(localStorage.getItem('users'));
+  users[currentUser].journal.push(journalText.value);
+  localStorage.setItem('users', JSON.stringify(users));
+  journalText.value="";
+  loadData();
+}
+
+// MOOD
+function saveMood(){
+  let users = JSON.parse(localStorage.getItem('users'));
+  users[currentUser].moods.push(moodSelect.value);
+  localStorage.setItem('users', JSON.stringify(users));
+  loadData();
+}
+
+// FRIEND REQUEST
+function sendRequest(){
+  let users = JSON.parse(localStorage.getItem('users'));
+  let target = friendInput.value;
+
+  if(!users[target]) return alert("User not found");
+  if(target===currentUser) return alert("Can't add yourself");
+
+  users[target].requests.push(currentUser);
+  localStorage.setItem('users', JSON.stringify(users));
+  alert("Request sent");
+}
+
+// ACCEPT
+function accept(i){
+  let users = JSON.parse(localStorage.getItem('users'));
+  let req = users[currentUser].requests[i];
+
+  users[currentUser].friends.push(req);
+  users[req].friends.push(currentUser);
+  users[currentUser].requests.splice(i,1);
+
+  localStorage.setItem('users', JSON.stringify(users));
+  loadData();
+}
+
+// LOAD DATA
+function loadData(){
+  let users = JSON.parse(localStorage.getItem('users'));
+  let user = users[currentUser];
+
+  // journal
+  entries.innerHTML="";
+  user.journal.forEach(e=>{
+    let li=document.createElement('li');
+    li.textContent=e;
+    entries.appendChild(li);
+  });
+
+  // moods
+  moodList.innerHTML="";
+  user.moods.forEach(m=>{
+    let li=document.createElement('li');
+    li.textContent=m;
+    moodList.appendChild(li);
+  });
+
+  // requests
+  requests.innerHTML="";
+  user.requests.forEach((r,i)=>{
+    let div=document.createElement('div');
+    div.className='friend';
+    div.innerHTML = r + " <button onclick='accept("+i+")'>Accept</button>";
+    requests.appendChild(div);
+  });
+
+  // friends
+  friendsList.innerHTML="";
+  user.friends.forEach(f=>{
+    let div=document.createElement('div');
+    div.textContent=f;
+    friendsList.appendChild(div);
+  });
+}
+
+// BREATHING
+let interval;
+function startBreathing(){
+  let t=4;
+  clearInterval(interval);
+  interval=setInterval(()=>{
+    timer.textContent=t;
+    t--;
+    if(t<0) t=4;
+  },1000);
+}
+
+// INIT
+updateNav();
+showPage('login');
+
+</script>
+
+</body>
+</html>
